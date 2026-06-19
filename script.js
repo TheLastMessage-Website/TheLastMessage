@@ -1,0 +1,559 @@
+
+/* ==============================================
+   The Last Message — script.js v20260619
+   ============================================== */
+
+// Preload critical images immediately
+(function () {
+    ['https://files.catbox.moe/1zb08m.jpg', 'https://files.catbox.moe/hzl17x.png'].forEach(function (src) {
+        var img = new Image();
+        img.src = src;
+    });
+})();
+
+
+// ---- Loading Screen ----
+(function () {
+    var loader    = document.getElementById('page-loader');
+    var loaderBar = document.getElementById('loaderBar');
+    var loaderTxt = document.getElementById('loaderText');
+    var dismissed = false;
+    var messages  = ['Loading...', 'Preparing history...', 'Almost ready...'];
+    var msgIdx    = 0;
+
+    var msgTimer = setInterval(function () {
+        msgIdx = (msgIdx + 1) % messages.length;
+        if (loaderTxt) loaderTxt.textContent = messages[msgIdx];
+    }, 900);
+
+    function animateBar(to, duration) {
+        if (!loaderBar) return;
+        var start = null;
+        var from  = parseFloat(loaderBar.style.width) || 0;
+        function step(ts) {
+            if (!start) start = ts;
+            var pct = Math.min((ts - start) / duration, 1);
+            loaderBar.style.width = (from + (to - from) * pct) + '%';
+            if (pct < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    animateBar(40, 400);
+
+    function hideLoader() {
+        if (dismissed) return;
+        dismissed = true;
+        clearInterval(msgTimer);
+        animateBar(100, 250);
+        setTimeout(function () {
+            if (loader) {
+                loader.classList.add('hidden');
+                setTimeout(function () {
+                    if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+                }, 600);
+            }
+            document.body.classList.add('ready');
+        }, 300);
+    }
+
+    if (document.readyState === 'complete') {
+        animateBar(90, 300);
+        setTimeout(hideLoader, 150);
+    } else {
+        window.addEventListener('load', function () {
+            animateBar(90, 300);
+            setTimeout(hideLoader, 150);
+        });
+    }
+
+    var heroImg = document.querySelector('.hero-logo-img');
+    if (heroImg) {
+        if (heroImg.complete) { animateBar(70, 200); }
+        else {
+            heroImg.addEventListener('load',  function () { animateBar(70, 200); });
+            heroImg.addEventListener('error', function () { animateBar(70, 200); });
+        }
+    }
+
+    setTimeout(hideLoader, 3500); // hard fallback
+})();
+
+
+// ---- Fix 100vh on mobile browsers ----
+(function () {
+    function setVH() {
+        document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    }
+    setVH();
+    window.addEventListener('resize', setVH, { passive: true });
+    window.addEventListener('orientationchange', function () { setTimeout(setVH, 200); });
+})();
+
+
+// ---- Zoom detection (navbar blur fix) ----
+(function () {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    var timer;
+    vv.addEventListener('resize', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            document.body.classList.toggle('zoom-extreme', vv.scale > 2.5 || vv.scale < 0.9);
+        }, 80);
+    });
+})();
+
+
+// ---- Navbar scroll style ----
+var navbar = document.getElementById('navbar');
+if (navbar) {
+    window.addEventListener('scroll', function () {
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+    }, { passive: true });
+}
+
+
+// ---- Navbar mobile menu ----
+var navToggle = document.getElementById('navToggle');
+var navLinks  = document.getElementById('navLinks');
+
+function closeNav() {
+    if (!navLinks || !navToggle) return;
+    navLinks.classList.remove('open');
+    navToggle.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+}
+
+if (navToggle && navLinks) {
+    navToggle.addEventListener('click', function () {
+        var isOpen = navLinks.classList.toggle('open');
+        navToggle.classList.toggle('open', isOpen);
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // Close nav when any nav-link-item is tapped (handled separately in smooth scroll)
+    document.addEventListener('click', function (e) {
+        if (navbar && !navbar.contains(e.target)) closeNav();
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 768) closeNav();
+    }, { passive: true });
+}
+
+
+// ---- Smooth scroll — works reliably on all mobile browsers ----
+//
+// Root cause of "nothing happens when tapped":
+//   1. window.scrollTo({ behavior:'smooth' }) silently fails on iOS < 15.4
+//   2. CSS scroll-behavior:smooth can conflict with JS-driven scrolls
+//   3. clip-path on buttons cuts the touch hit area on some Android browsers
+//
+// Fix: manual RAF animation + setTimeout to break out of the tap event stack
+//      CSS: clip-path only applied on pointer:fine (mouse) devices
+
+function smoothScrollTo(targetEl) {
+    if (!targetEl) return;
+    var navH     = navbar ? (navbar.offsetHeight || 72) : 72;
+    var endPos   = Math.round(targetEl.getBoundingClientRect().top + window.pageYOffset - navH);
+    var startPos = Math.round(window.pageYOffset);
+    var distance = endPos - startPos;
+
+    if (Math.abs(distance) < 2) return; // already at destination
+
+    var duration  = Math.max(350, Math.min(700, Math.abs(distance) * 0.45));
+    var startTime = null;
+
+    function ease(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+
+    function step(ts) {
+        if (startTime === null) startTime = ts;
+        var elapsed  = ts - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        window.scrollTo(0, startPos + distance * ease(progress));
+        if (progress < 1) requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+}
+
+// Central scroll handler — called by both click and touchend paths
+function handleScrollLink(e, anchor) {
+    var href = anchor.getAttribute('href');
+    // Skip non-section hrefs and anchors that have onclick (overlay openers)
+    if (!href || href === '#' || anchor.getAttribute('onclick')) return;
+
+    var target = document.getElementById(href.replace('#', ''));
+    if (!target) return;
+
+    e.preventDefault();
+
+    var targetEl = target;
+    closeNav(); // close mobile nav first
+
+    // setTimeout breaks out of the event call stack.
+    // This is the key fix: on iOS/Android some browsers block
+    // window.scrollTo when called synchronously inside a touch handler.
+    setTimeout(function () {
+        smoothScrollTo(targetEl);
+    }, 30);
+}
+
+// Attach to all anchor links that point to sections
+document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+    // Skip overlay openers — they have their own onclick
+    if (anchor.getAttribute('onclick')) return;
+
+    // Touch path — handle on touchend for fastest response
+    var touchStartY = 0;
+    var touchMoved  = false;
+
+    anchor.addEventListener('touchstart', function (e) {
+        touchStartY = e.touches[0].clientY;
+        touchMoved  = false;
+    }, { passive: true });
+
+    anchor.addEventListener('touchmove', function (e) {
+        // FIX #3: Raised threshold from 10px → 20px so normal tap jitter
+        // doesn't falsely flag as a scroll and swallow the tap
+        if (Math.abs(e.touches[0].clientY - touchStartY) > 20) touchMoved = true;
+    }, { passive: true });
+
+    anchor.addEventListener('touchend', function (e) {
+        if (touchMoved) return; // was a scroll gesture, not a tap
+        handleScrollLink(e, this);
+    }, { passive: false });
+
+    // Mouse click path (desktop)
+    anchor.addEventListener('click', function (e) {
+        // If touch already handled it, the click will fire ~300ms later on some
+        // browsers — ignore it to avoid double-scrolling
+        if (e.detail === 0) return; // synthetic click, skip
+        handleScrollLink(e, this);
+    });
+});
+
+
+// ---- FAQ accordion ----
+document.querySelectorAll('.faq-item').forEach(function (item) {
+    var question = item.querySelector('.faq-question');
+    if (!question) return;
+    question.addEventListener('click', function () {
+        var wasActive = item.classList.contains('active');
+        document.querySelectorAll('.faq-item').forEach(function (f) { f.classList.remove('active'); });
+        if (!wasActive) item.classList.add('active');
+    });
+});
+
+
+// ---- Team categories accordion ----
+document.querySelectorAll('.team-cat').forEach(function (cat) {
+    var header = cat.querySelector('.team-cat-header');
+    if (!header) return;
+    header.addEventListener('click', function () {
+        var wasActive = cat.classList.contains('active');
+        document.querySelectorAll('.team-cat').forEach(function (c) { c.classList.remove('active'); });
+        if (!wasActive) cat.classList.add('active');
+    });
+});
+
+
+// ---- Fade-in on scroll ----
+(function () {
+    if (!('IntersectionObserver' in window)) {
+        document.querySelectorAll('.fade-in').forEach(function (el) { el.classList.add('visible'); });
+        return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
+
+    function register() {
+        document.querySelectorAll('.fade-in').forEach(function (el) { observer.observe(el); });
+    }
+
+    if ('requestIdleCallback' in window) requestIdleCallback(register);
+    else setTimeout(register, 150);
+})();
+
+
+// ---- Hero content fade on scroll ----
+window.addEventListener('scroll', function () {
+    var hero = document.querySelector('.hero-content');
+    if (hero) hero.style.opacity = Math.max(0, 1 - window.pageYOffset / 600);
+    var ind = document.querySelector('.scroll-indicator');
+    if (ind) ind.style.opacity = window.scrollY > 100 ? '0' : '1';
+}, { passive: true });
+
+
+// ---- Gold dust cursor trail — desktop pointer only ----
+(function () {
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    var pending  = false;
+    var dotCount = 0;
+    document.addEventListener('mousemove', function (e) {
+        if (window.innerWidth <= 768 || pending || dotCount >= 10) return;
+        pending = true;
+        requestAnimationFrame(function () {
+            pending = false;
+            var dot = document.createElement('div');
+            dot.style.cssText = 'position:fixed;width:4px;height:4px;border-radius:50%;background:rgba(201,168,76,0.32);left:' + e.clientX + 'px;top:' + e.clientY + 'px;pointer-events:none;z-index:9999;transition:opacity 0.5s ease,transform 0.5s ease;will-change:opacity,transform;';
+            document.body.appendChild(dot);
+            dotCount++;
+            requestAnimationFrame(function () { dot.style.opacity = '0'; dot.style.transform = 'scale(3)'; });
+            setTimeout(function () { if (dot.parentNode) dot.parentNode.removeChild(dot); dotCount--; }, 520);
+        });
+    }, { passive: true });
+})();
+
+
+// ---- Background slideshow ----
+(function () {
+    var slides   = Array.from(document.querySelectorAll('.bg-slide'));
+    var loaded   = slides.map(function (_, i) { return i === 0; });
+    var sections = ['home', 'trailer', 'gameplay', 'story', 'faq', 'community', 'team'];
+    var offsets  = [];
+    var current  = 0;
+    var raf      = null;
+
+    function loadSlide(idx) {
+        if (loaded[idx]) return;
+        loaded[idx] = true;
+        var bg = slides[idx].getAttribute('data-bg');
+        if (!bg) return;
+        var img = new Image();
+        img.onload = function () { slides[idx].style.backgroundImage = "url('" + bg + "')"; };
+        img.src = bg;
+    }
+
+    function preloadAll() { slides.forEach(function (_, i) { if (i > 0) loadSlide(i); }); }
+    if ('requestIdleCallback' in window) requestIdleCallback(preloadAll, { timeout: 2500 });
+    else setTimeout(preloadAll, 1000);
+
+    function buildOffsets() {
+        offsets = sections
+            .map(function (id) { return document.getElementById(id); })
+            .filter(Boolean)
+            .map(function (el) { return el.getBoundingClientRect().top + window.pageYOffset; });
+    }
+
+    function indexFor() {
+        var trigger = window.scrollY + window.innerHeight * 0.3;
+        var idx = 0;
+        offsets.forEach(function (top, i) {
+            if (trigger >= top) idx = Math.min(Math.floor(i * slides.length / sections.length), slides.length - 1);
+        });
+        return idx;
+    }
+
+    function update() {
+        var next = indexFor();
+        if (next === current) return;
+        loadSlide(next);
+        current = next;
+        slides.forEach(function (s, i) { s.classList.toggle('active', i === next); });
+    }
+
+    slides[0].classList.add('active');
+    window.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = requestAnimationFrame(function () { raf = null; update(); });
+    }, { passive: true });
+    window.addEventListener('resize', function () { buildOffsets(); update(); }, { passive: true });
+    window.addEventListener('load',   function () { buildOffsets(); update(); });
+    setTimeout(buildOffsets, 200);
+})();
+
+
+// ---- Codex overlay ----
+function openCodex() {
+    var o = document.getElementById('codexOverlay');
+    if (!o) return;
+    o.classList.add('open');
+    o.scrollTop = 0;
+    document.documentElement.style.overflow = 'hidden';
+}
+function closeCodex() {
+    var o = document.getElementById('codexOverlay');
+    if (!o) return;
+    o.classList.remove('open');
+    document.documentElement.style.overflow = '';
+}
+var codexOverlay = document.getElementById('codexOverlay');
+if (codexOverlay) {
+    codexOverlay.addEventListener('click', function (e) { if (e.target === this) closeCodex(); });
+}
+
+
+// ---- Devlogs overlay ----
+function openDevlogs() {
+    var o = document.getElementById('devlogsOverlay');
+    if (!o) return;
+    o.classList.add('open');
+    o.scrollTop = 0;
+    document.documentElement.style.overflow = 'hidden';
+}
+function closeDevlogs() {
+    var o = document.getElementById('devlogsOverlay');
+    if (!o) return;
+    o.classList.remove('open');
+    document.documentElement.style.overflow = '';
+}
+var devlogsOverlay = document.getElementById('devlogsOverlay');
+if (devlogsOverlay) {
+    devlogsOverlay.addEventListener('click', function (e) { if (e.target === this) closeDevlogs(); });
+}
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeCodex(); closeDevlogs(); }
+});
+
+
+// ---- Scroll progress bar ----
+(function () {
+    var bar     = document.getElementById('scrollProgressBar');
+    var ticking = false;
+    if (!bar) return;
+    function update() {
+        var h   = document.documentElement;
+        var pct = (window.pageYOffset / ((h.scrollHeight - h.clientHeight) || 1)) * 100;
+        bar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+        ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+        if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
+})();
+
+
+// ---- Archive rail — arrow buttons + mouse drag ----
+(function () {
+    // Arrow buttons
+    document.querySelectorAll('.ac-rail-prev, .ac-rail-next').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var track = document.getElementById(btn.dataset.target);
+            if (!track) return;
+            var first = track.querySelector('.ac-tile');
+            var step  = first ? first.getBoundingClientRect().width + 20 : track.clientWidth * 0.8;
+            track.scrollBy({ left: btn.classList.contains('ac-rail-next') ? step : -step, behavior: 'smooth' });
+        });
+    });
+
+    // Mouse-only drag to scroll
+    document.querySelectorAll('.ac-rail-track').forEach(function (track) {
+        var isDown    = false;
+        var startX    = 0;
+        var startLeft = 0;
+        var mouseMoved = 0;
+        var MOUSE_THRESHOLD = 8;
+
+        track.addEventListener('mousedown', function (e) {
+            if (e.button !== 0) return;
+            isDown     = true;
+            mouseMoved = 0;
+            startX     = e.pageX;
+            startLeft  = track.scrollLeft;
+            track.classList.add('is-dragging');
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', function (e) {
+            if (!isDown) return;
+            var dx = e.pageX - startX;
+            mouseMoved = Math.abs(dx);
+            track.scrollLeft = startLeft - dx;
+        }, { passive: true });
+        window.addEventListener('mouseup', function () {
+            isDown = false;
+            track.classList.remove('is-dragging');
+        });
+        track.addEventListener('click', function (e) {
+            if (mouseMoved > MOUSE_THRESHOLD) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            mouseMoved = 0;
+        }, true);
+
+        // Touch — native browser scroll handles horizontal swiping via
+        // touch-action: pan-x pan-y. We only need to guard against accidental
+        // link taps after a clear horizontal swipe (threshold: 22px).
+        var TOUCH_THRESHOLD = 22;
+        var touchStartX = 0;
+        var touchMoved  = 0;
+
+        track.addEventListener('touchstart', function (e) {
+            touchStartX = e.touches[0].clientX;
+            touchMoved  = 0;
+        }, { passive: true });
+
+        track.addEventListener('touchmove', function (e) {
+            touchMoved = Math.abs(e.touches[0].clientX - touchStartX);
+        }, { passive: true });
+
+        track.addEventListener('touchend', function (e) {
+            if (touchMoved > TOUCH_THRESHOLD) {
+                // Clear horizontal swipe — prevent accidental link activation
+                var anchor = e.target.closest('a');
+                if (anchor && !anchor.getAttribute('onclick')) {
+                    e.preventDefault();
+                }
+            }
+            touchMoved = 0; // reset every time
+        }, { passive: false });
+    });
+})();
+
+
+// ---- HUD side nav — highlight active section ----
+(function () {
+    var dots = document.querySelectorAll('nav.ac-hud a');
+    if (!dots.length) return;
+    var ids      = Array.prototype.map.call(dots, function (a) { return a.getAttribute('href').slice(1); });
+    var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+
+    function highlight() {
+        var y       = window.scrollY + window.innerHeight * 0.35;
+        var current = sections[0];
+        for (var i = 0; i < sections.length; i++) {
+            if (sections[i] && sections[i].offsetTop <= y) current = sections[i];
+        }
+        dots.forEach(function (d) {
+            d.classList.toggle('active', d.getAttribute('href') === '#' + (current && current.id));
+        });
+    }
+
+    window.addEventListener('scroll', highlight, { passive: true });
+    window.addEventListener('resize', highlight, { passive: true });
+    highlight();
+})();
+
+
+// ---- Lazy-load background images ----
+(function () {
+    if (!('IntersectionObserver' in window)) return;
+    var lazySlides = document.querySelectorAll('.bg-slide[data-bg]');
+    if (!lazySlides.length) return;
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var slide = entry.target;
+            var bg    = slide.getAttribute('data-bg');
+            if (bg && !slide.style.backgroundImage) {
+                var img = new Image();
+                img.onload = function () { slide.style.backgroundImage = "url('" + bg + "')"; };
+                img.src = bg;
+            }
+            observer.unobserve(slide);
+        });
+    }, { rootMargin: '200px' });
+    lazySlides.forEach(function (slide) { observer.observe(slide); });
+})();
