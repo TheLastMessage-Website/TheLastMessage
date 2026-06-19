@@ -76,7 +76,7 @@
         }
     }
 
-    setTimeout(hideLoader, 3500); // hard fallback
+    setTimeout(hideLoader, 3500);
 })();
 
 
@@ -133,7 +133,7 @@ if (navToggle && navLinks) {
         navToggle.setAttribute('aria-expanded', String(isOpen));
     });
 
-    // Close nav when any nav-link-item is tapped (handled separately in smooth scroll)
+    // Close nav when clicking outside
     document.addEventListener('click', function (e) {
         if (navbar && !navbar.contains(e.target)) closeNav();
     });
@@ -144,94 +144,13 @@ if (navToggle && navLinks) {
 }
 
 
-// ---- Smooth scroll — works reliably on all mobile browsers ----
-//
-// Root cause of "nothing happens when tapped":
-//   1. window.scrollTo({ behavior:'smooth' }) silently fails on iOS < 15.4
-//   2. CSS scroll-behavior:smooth can conflict with JS-driven scrolls
-//   3. clip-path on buttons cuts the touch hit area on some Android browsers
-//
-// Fix: manual RAF animation + setTimeout to break out of the tap event stack
-//      CSS: clip-path only applied on pointer:fine (mouse) devices
-
-function smoothScrollTo(targetEl) {
-    if (!targetEl) return;
-    var navH     = navbar ? (navbar.offsetHeight || 72) : 72;
-    var endPos   = Math.round(targetEl.getBoundingClientRect().top + window.pageYOffset - navH);
-    var startPos = Math.round(window.pageYOffset);
-    var distance = endPos - startPos;
-
-    if (Math.abs(distance) < 2) return; // already at destination
-
-    var duration  = Math.max(350, Math.min(700, Math.abs(distance) * 0.45));
-    var startTime = null;
-
-    function ease(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
-
-    function step(ts) {
-        if (startTime === null) startTime = ts;
-        var elapsed  = ts - startTime;
-        var progress = Math.min(elapsed / duration, 1);
-        window.scrollTo(0, startPos + distance * ease(progress));
-        if (progress < 1) requestAnimationFrame(step);
-    }
-
-    requestAnimationFrame(step);
-}
-
-// Central scroll handler — called by both click and touchend paths
-function handleScrollLink(e, anchor) {
-    var href = anchor.getAttribute('href');
-    // Skip non-section hrefs and anchors that have onclick (overlay openers)
-    if (!href || href === '#' || anchor.getAttribute('onclick')) return;
-
-    var target = document.getElementById(href.replace('#', ''));
-    if (!target) return;
-
-    e.preventDefault();
-
-    var targetEl = target;
-    closeNav(); // close mobile nav first
-
-    // setTimeout breaks out of the event call stack.
-    // This is the key fix: on iOS/Android some browsers block
-    // window.scrollTo when called synchronously inside a touch handler.
-    setTimeout(function () {
-        smoothScrollTo(targetEl);
-    }, 30);
-}
-
-// Attach to all anchor links that point to sections
+// ---- Navigation: close mobile nav on link click, let browser scroll ----
+// CSS handles smooth scrolling (scroll-behavior:smooth + scroll-padding-top on html).
+// No e.preventDefault(), no custom JS scroll — browser does it natively and reliably.
 document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-    // Skip overlay openers — they have their own onclick
-    if (anchor.getAttribute('onclick')) return;
-
-    // Touch path — handle on touchend for fastest response
-    var touchStartY = 0;
-    var touchMoved  = false;
-
-    anchor.addEventListener('touchstart', function (e) {
-        touchStartY = e.touches[0].clientY;
-        touchMoved  = false;
-    }, { passive: true });
-
-    anchor.addEventListener('touchmove', function (e) {
-        // FIX #3: Raised threshold from 10px → 20px so normal tap jitter
-        // doesn't falsely flag as a scroll and swallow the tap
-        if (Math.abs(e.touches[0].clientY - touchStartY) > 20) touchMoved = true;
-    }, { passive: true });
-
-    anchor.addEventListener('touchend', function (e) {
-        if (touchMoved) return; // was a scroll gesture, not a tap
-        handleScrollLink(e, this);
-    }, { passive: false });
-
-    // Mouse click path (desktop)
-    anchor.addEventListener('click', function (e) {
-        // If touch already handled it, the click will fire ~300ms later on some
-        // browsers — ignore it to avoid double-scrolling
-        if (e.detail === 0) return; // synthetic click, skip
-        handleScrollLink(e, this);
+    if (anchor.getAttribute('onclick')) return; // skip overlay openers
+    anchor.addEventListener('click', function () {
+        closeNav(); // just close mobile menu if open
     });
 });
 
@@ -266,20 +185,12 @@ document.querySelectorAll('.team-cat').forEach(function (cat) {
         document.querySelectorAll('.fade-in').forEach(function (el) { el.classList.add('visible'); });
         return;
     }
-
     var observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-            }
+            if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
         });
     }, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
-
-    function register() {
-        document.querySelectorAll('.fade-in').forEach(function (el) { observer.observe(el); });
-    }
-
+    function register() { document.querySelectorAll('.fade-in').forEach(function (el) { observer.observe(el); }); }
     if ('requestIdleCallback' in window) requestIdleCallback(register);
     else setTimeout(register, 150);
 })();
@@ -437,7 +348,6 @@ document.addEventListener('keydown', function (e) {
 
 // ---- Archive rail — arrow buttons + mouse drag ----
 (function () {
-    // Arrow buttons
     document.querySelectorAll('.ac-rail-prev, .ac-rail-next').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var track = document.getElementById(btn.dataset.target);
@@ -448,20 +358,14 @@ document.addEventListener('keydown', function (e) {
         });
     });
 
-    // Mouse-only drag to scroll
     document.querySelectorAll('.ac-rail-track').forEach(function (track) {
-        var isDown    = false;
-        var startX    = 0;
-        var startLeft = 0;
-        var mouseMoved = 0;
+        var isDown = false, startX = 0, startLeft = 0, mouseMoved = 0;
         var MOUSE_THRESHOLD = 8;
 
         track.addEventListener('mousedown', function (e) {
             if (e.button !== 0) return;
-            isDown     = true;
-            mouseMoved = 0;
-            startX     = e.pageX;
-            startLeft  = track.scrollLeft;
+            isDown = true; mouseMoved = 0;
+            startX = e.pageX; startLeft = track.scrollLeft;
             track.classList.add('is-dragging');
             e.preventDefault();
         });
@@ -471,43 +375,21 @@ document.addEventListener('keydown', function (e) {
             mouseMoved = Math.abs(dx);
             track.scrollLeft = startLeft - dx;
         }, { passive: true });
-        window.addEventListener('mouseup', function () {
-            isDown = false;
-            track.classList.remove('is-dragging');
-        });
+        window.addEventListener('mouseup', function () { isDown = false; track.classList.remove('is-dragging'); });
         track.addEventListener('click', function (e) {
-            if (mouseMoved > MOUSE_THRESHOLD) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            if (mouseMoved > MOUSE_THRESHOLD) { e.preventDefault(); e.stopPropagation(); }
             mouseMoved = 0;
         }, true);
 
-        // Touch — native browser scroll handles horizontal swiping via
-        // touch-action: pan-x pan-y. We only need to guard against accidental
-        // link taps after a clear horizontal swipe (threshold: 22px).
-        var TOUCH_THRESHOLD = 22;
-        var touchStartX = 0;
-        var touchMoved  = 0;
-
-        track.addEventListener('touchstart', function (e) {
-            touchStartX = e.touches[0].clientX;
-            touchMoved  = 0;
-        }, { passive: true });
-
-        track.addEventListener('touchmove', function (e) {
-            touchMoved = Math.abs(e.touches[0].clientX - touchStartX);
-        }, { passive: true });
-
-        track.addEventListener('touchend', function (e) {
+        var TOUCH_THRESHOLD = 22, touchStartX = 0, touchMoved = 0;
+        track.addEventListener('touchstart', function (e) { touchStartX = e.touches[0].clientX; touchMoved = 0; }, { passive: true });
+        track.addEventListener('touchmove',  function (e) { touchMoved = Math.abs(e.touches[0].clientX - touchStartX); }, { passive: true });
+        track.addEventListener('touchend',   function (e) {
             if (touchMoved > TOUCH_THRESHOLD) {
-                // Clear horizontal swipe — prevent accidental link activation
                 var anchor = e.target.closest('a');
-                if (anchor && !anchor.getAttribute('onclick')) {
-                    e.preventDefault();
-                }
+                if (anchor && !anchor.getAttribute('onclick')) e.preventDefault();
             }
-            touchMoved = 0; // reset every time
+            touchMoved = 0;
         }, { passive: false });
     });
 })();
@@ -521,7 +403,7 @@ document.addEventListener('keydown', function (e) {
     var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
 
     function highlight() {
-        var y       = window.scrollY + window.innerHeight * 0.35;
+        var y = window.scrollY + window.innerHeight * 0.35;
         var current = sections[0];
         for (var i = 0; i < sections.length; i++) {
             if (sections[i] && sections[i].offsetTop <= y) current = sections[i];
