@@ -553,9 +553,10 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 /* Scroll backgrounds: two GPU layers that cross-fade, nothing runs on scroll */
 .bgfx { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; z-index: -1; pointer-events: none; overflow: hidden; background: var(--bg); contain: strict; }
-.bgfx::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(8, 11, 16, 0.35), rgba(8, 11, 16, 0.78)), linear-gradient(180deg, rgba(8, 11, 16, 0.55), rgba(8, 11, 16, 0.7)); }
-.bgfx__layer { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1.06) translateZ(0); backface-visibility: hidden; transition: opacity 1.3s ease, transform 9s ease-out; will-change: opacity; }
-.bgfx__layer.on { opacity: 1; transform: scale(1) translateZ(0); }
+.bgfx::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(8, 11, 16, 0.12), rgba(8, 11, 16, 0.5)), linear-gradient(180deg, rgba(8, 11, 16, 0.22), rgba(8, 11, 16, 0.36)); }
+.bgfx__layer { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: translateZ(0); backface-visibility: hidden; filter: brightness(1.08) saturate(1.08); transition: opacity 1s ease; }
+.bgfx__layer.on { opacity: 1; }
+.sec .title, .sec .lede, .sec .eyebrow, .feature__title { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55); }
 
 /* Navbar — Assassin's Creed look */
 .navbar { background: var(--ac-slate); border-bottom: 1px solid var(--ac-line); }
@@ -650,7 +651,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 <div class="scroll-progress" aria-hidden="true"><div class="scroll-progress__bar" id="scrollProgressBar"></div></div>
 
-<div class="bgfx" aria-hidden="true"><div class="bgfx__layer"></div><div class="bgfx__layer"></div></div>
+<div class="bgfx" aria-hidden="true"><div class="bgfx__layer on" style="background-image:url('https://files.catbox.moe/ewccee.png')"></div></div>
 
 <div id="site-wrap">
 
@@ -710,7 +711,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <main>
 
 <!-- Hero carousel -->
-<section id="home" data-bg="" class="hero" aria-roledescription="carousel" aria-label="Featured">
+<section id="home" class="hero" aria-roledescription="carousel" aria-label="Featured">
     <article class="hero__slide is-active" aria-roledescription="slide" aria-label="1 of 3">
         <div class="hero__bg" style="background-image:url('https://files.catbox.moe/hzl17x.png')"></div>
         <div class="hero__shade"></div>
@@ -766,7 +767,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Trailer -->
-<section id="trailer" data-bg="" class="sec sec--center">
+<section id="trailer" class="sec sec--center">
     <p class="eyebrow fade-in"><span>Official</span></p>
     <h2 class="title fade-in">Trailer</h2>
     <p class="lede fade-in">Watch the official trailer for The Last Message</p>
@@ -781,7 +782,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Gameplay -->
-<section id="gameplay" data-bg="https://files.catbox.moe/eecnei.png" class="sec sec--center">
+<section id="gameplay" class="sec sec--center">
     <p class="eyebrow fade-in"><span>Gameplay</span></p>
     <h2 class="title fade-in">Gameplay</h2>
     <p class="lede fade-in">Watch gameplay footage from The Last Message.<br>This footage is from an older build. The Last Message has evolved significantly since then.</p>
@@ -796,7 +797,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Story -->
-<section id="story" data-bg="https://files.catbox.moe/ewccee.png" class="sec">
+<section id="story" class="sec">
     <p class="eyebrow fade-in"><span>The Story</span></p>
     <h2 class="title fade-in">The Journey</h2>
     <p class="lede fade-in">Experience an authentic and respectful retelling of one of history's most impactful stories</p>
@@ -858,7 +859,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- FAQ -->
-<section id="faq" data-bg="https://files.catbox.moe/01b0ls.png" class="sec">
+<section id="faq" class="sec">
     <p class="eyebrow fade-in"><span>Knowledge</span></p>
     <h2 class="title fade-in">Frequently Asked Questions</h2>
     <p class="lede fade-in">Everything you need to know about The Last Message</p>
@@ -889,7 +890,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Community -->
-<section id="community" data-bg="https://files.catbox.moe/hzl17x.png" class="sec">
+<section id="community" class="sec">
     <p class="eyebrow fade-in"><span>Community</span></p>
     <h2 class="title fade-in">Join Our Community</h2>
     <p class="lede fade-in">Connect with fellow enthusiasts and stay updated on our journey</p>
@@ -943,7 +944,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Archive: Codex + Developer Logs -->
-<section id="archive" data-bg="https://files.catbox.moe/u5oeyg.png" class="sec">
+<section id="archive" class="sec">
     <p class="eyebrow fade-in"><span>The Archive</span></p>
     <h2 class="title fade-in">The Archive</h2>
     <p class="lede fade-in">Codex and Developer Logs &mdash; all the deeper layers of The Last Message in one place.</p>
@@ -1057,7 +1058,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Team -->
-<section id="team" data-bg="https://files.catbox.moe/sek4x7.png" class="sec">
+<section id="team" class="sec">
     <p class="eyebrow fade-in"><span>The Team</span></p>
     <h2 class="title fade-in">Meet the Team</h2>
     <p class="lede fade-in">The passionate team crafting every detail of The Last Message</p>
@@ -1111,7 +1112,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Pre-Beta -->
-<section class="sec sec--center prebeta fade-in" data-bg="https://files.catbox.moe/gyirfh.png">
+<section class="sec sec--center prebeta fade-in">
     <p class="eyebrow"><span>Pre-Beta</span></p>
     <h2 class="title title--md">Currently in Development</h2>
     <p class="lede">The game is currently in pre-beta. Join the community on Discord if you want to get early access and be part of the journey.</p>
@@ -1521,56 +1522,6 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
     if (e.key !== 'Escape') return;
     closeCodex(); setMenu(false); setCta(false);
   });
-})();
-
-</script>
-<script>
-/* ================= SCROLL BACKGROUNDS ================= */
-(function () {
-  'use strict';
-  var wrap = document.querySelector('.bgfx');
-  if (!wrap || !('IntersectionObserver' in window)) return;
-  var layers = Array.prototype.slice.call(wrap.querySelectorAll('.bgfx__layer'));
-  var cache = {}, front = 0, current = '', token = 0;
-
-  function load(url) {
-    if (cache[url]) return cache[url];
-    cache[url] = new Promise(function (resolve) {
-      var im = new Image();
-      im.decoding = 'async';
-      im.onload = function () { (im.decode ? im.decode().catch(function () {}) : Promise.resolve()).then(resolve); };
-      im.onerror = resolve;
-      im.src = url;
-    });
-    return cache[url];
-  }
-  function show(url) {
-    if (url === current) return;
-    current = url;
-    var t = ++token;
-    if (!url) { layers.forEach(function (l) { l.classList.remove('on'); }); return; }
-    load(url).then(function () {
-      if (t !== token) return;
-      var back = 1 - front;
-      layers[back].style.backgroundImage = "url('" + url + "')";
-      layers[back].classList.add('on');
-      layers[front].classList.remove('on');
-      front = back;
-    });
-  }
-
-  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-bg]'));
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) { if (en.isIntersecting) show(en.target.getAttribute('data-bg') || ''); });
-  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
-  secs.forEach(function (el) { io.observe(el); });
-
-  // Warm the cache quietly after the page is idle so swaps never wait on the network
-  function warm() {
-    var urls = secs.map(function (e) { return e.getAttribute('data-bg'); }).filter(Boolean), i = 0;
-    (function next() { if (i >= urls.length) return; load(urls[i++]).then(function () { setTimeout(next, 250); }); })();
-  }
-  window.addEventListener('load', function () { setTimeout(warm, 1500); });
 })();
 
 </script>
