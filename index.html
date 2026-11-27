@@ -363,6 +363,11 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 .acc__inner { min-height: 0; overflow: hidden; }
 .acc__inner > p { padding: 0 1.8rem 1.7rem 1.6rem; color: #bcc3ca; line-height: 1.85; }
 
+  display: grid; grid-template-columns: 64px 1fr auto; grid-template-areas: 'icon title cta' 'icon desc cta';
+  column-gap: clamp(1.2rem, 3vw, 2.2rem); row-gap: 0.3rem; align-items: center; padding: 1.9rem 0.5rem;
+  border-bottom: 1px solid var(--line); transition: background 0.4s ease;
+}
+
 /* ---- Team -------------------------------------------------------------- */
 #team .lede { margin-bottom: clamp(2rem, 4vw, 3rem); }
 .lead { position: relative; display: flex; align-items: center; gap: clamp(1.5rem, 4vw, 2.8rem); padding: clamp(1.6rem, 4vw, 2.8rem); margin-bottom: 3rem; background: linear-gradient(180deg, var(--card-a), var(--card-b)); border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; }
@@ -540,6 +545,83 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
   .js .fade-in { opacity: 1; transform: none; }
 }
 
+
+/* ==========================================================================
+   AC OVERRIDES — navbar, flat slate panels, smaller hero buttons, scroll backgrounds
+   ========================================================================== */
+:root { --ac-slate: #2a3139; --ac-slate-deep: #20262d; --ac-line: rgba(255, 255, 255, 0.09); --ac-teal: #4f7d8b; --ac-teal-hover: #5c8d9c; }
+
+/* Scroll backgrounds: two GPU layers that cross-fade, nothing runs on scroll */
+.bgfx { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; z-index: -1; pointer-events: none; overflow: hidden; background: var(--bg); contain: strict; }
+.bgfx::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(8, 11, 16, 0.35), rgba(8, 11, 16, 0.78)), linear-gradient(180deg, rgba(8, 11, 16, 0.55), rgba(8, 11, 16, 0.7)); }
+.bgfx__layer { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1.06) translateZ(0); backface-visibility: hidden; transition: opacity 1.3s ease, transform 9s ease-out; will-change: opacity; }
+.bgfx__layer.on { opacity: 1; transform: scale(1) translateZ(0); }
+
+/* Navbar — Assassin's Creed look */
+.navbar { background: var(--ac-slate); border-bottom: 1px solid var(--ac-line); }
+.brand__name { font-size: 1.35rem; letter-spacing: 0.08em; }
+.nav-links { gap: clamp(1.4rem, 2.6vw, 2.6rem); }
+.nav-links a { font-size: 1.02rem; font-weight: 400; letter-spacing: 0.01em; text-transform: none; color: #dfe4e8; }
+.nav-cta__btn { background: var(--ac-teal); font-weight: 500; }
+.nav-cta__btn:hover, .nav-cta__btn[aria-expanded="true"] { background: var(--ac-teal-hover); }
+.nav-cta__menu { background: var(--ac-slate); border: 1px solid var(--ac-line); border-top: 2px solid var(--ac-teal); border-radius: 0; }
+.nav-cta__menu a:hover { background: rgba(255, 255, 255, 0.06); }
+.nav-toggle { width: 44px; padding: 0 8px; }
+.nav-toggle span { height: 1.6px; }
+
+.menu { justify-content: flex-start; padding: calc(var(--nav-h) + 1.4rem) 1.9rem calc(1.6rem + env(safe-area-inset-bottom)); background: rgba(34, 41, 49, 0.9); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.menu__links { flex: none; }
+.menu__links a { border: 0; padding: 0.95rem 0; text-align: left; font-family: var(--sans); font-size: clamp(1.55rem, 5.6vw, 1.9rem); font-weight: 300; letter-spacing: 0.01em; text-transform: none; color: #e9edf0; }
+.menu__social { justify-content: flex-start; margin-top: 1.6rem; }
+.menu__social a { border-radius: 0; background: transparent; }
+.menu__cta { display: block; margin-top: auto; padding: 1.15rem 1rem; text-align: center; text-decoration: none; font-size: 1.05rem; font-weight: 500; color: #fff; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.28); transition: background 0.3s; }
+.menu__cta:hover { background: rgba(255, 255, 255, 0.16); }
+.menu__social + .menu__cta { margin-top: 2.4rem; }
+
+@media (max-width: 560px) {
+  .brand__name { display: block; max-width: 6.6em; font-size: 1.02rem; line-height: 1.08; letter-spacing: 0.06em; white-space: normal; }
+}
+
+/* Hero buttons — smaller */
+.hero__actions { gap: 0.8rem; margin-top: 1.8rem; }
+.hero__actions .btn { min-width: 190px; min-height: 48px; padding: 0 1.5rem; font-size: 0.9rem; font-weight: 500; }
+@media (max-width: 800px) {
+  .hero__actions { align-items: center; margin-top: 1.3rem; }
+  .hero__actions .btn { width: 100%; max-width: 250px; min-width: 0; min-height: 46px; font-size: 0.88rem; }
+}
+
+/* Flat, dark slate panels (FAQ, slides, team) */
+.acc, .card, .member { background: var(--ac-slate); border: 1px solid var(--ac-line); border-radius: 0; }
+.acc:hover, .acc.active, .card:hover { border-color: rgba(255, 255, 255, 0.2); }
+.member { background: var(--ac-slate-deep); }
+.member:hover { transform: none; border-color: rgba(255, 255, 255, 0.2); }
+.card__media { background: #1b2026; }
+.card--social .card__media--icon, .card__media--icon { background: #222930; }
+.card__tag { background: rgba(255, 255, 255, 0.07); border-radius: 0; }
+.acc__toggle { background: transparent; border-radius: 0; border-color: rgba(255, 255, 255, 0.3); }
+.acc.active .acc__toggle { background: var(--ac-teal); border-color: var(--ac-teal); }
+.acc.active .acc__toggle::before { border-color: #fff; }
+.acc__head { font-weight: 400; }
+.role { border-radius: 0; }
+.sq-btn { background: var(--ac-slate); border-radius: 0; box-shadow: none; border-color: rgba(255, 255, 255, 0.2); }
+.sq-btn:hover:not(:disabled) { box-shadow: none; border-color: rgba(255, 255, 255, 0.6); }
+.card .btn, .btn--arrow { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.28); border-radius: 0; box-shadow: none; }
+.card .btn:hover, .btn--arrow:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.6); box-shadow: none; }
+.card .btn::before, .btn--arrow::before { display: none; }
+.frame { background: var(--ac-slate); border-radius: 0; border-color: var(--ac-line); box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5); }
+.frame__inner { border-radius: 0; }
+
+/* Hedy — small card under Developers */
+.member--solo { margin-top: 0; padding: 1.2rem 1.4rem; }
+.member--solo .member__top { margin-bottom: 0.7rem; }
+.member--solo p { flex: none; max-width: 760px; }
+
+/* Crisp Steam logo */
+.ico { shape-rendering: geometricPrecision; }
+
+/* Footer without logo */
+.footer { padding-top: 3rem; }
+
 </style>
     <noscript><style>#page-loader{display:none}</style></noscript>
 </head>
@@ -547,7 +629,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 <!-- Icon sprite -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <symbol id="i-steam" viewBox="0 0 496 512"><path d="M496 256c0 137-111.2 248-248.4 248-113.8 0-209.7-76.3-239-180.4l95.2 39.3c6.4 18.1 23.8 31.1 44.2 31.1 26 0 47.2-21.1 47.2-47.1v-2.3l84.1-60.2c46.4 1.3 83.7-36 83.7-82.4 0-45.7-37.2-82.9-83-82.9-45.7 0-82.9 37.2-82.9 83 0 .9 0 1.8.1 2.7l-59.1 84.3c-3-.1-6.1-.2-9.2-.2-22.4 0-42.9 7.6-59.2 20.1L0 312.2C17.4 176.1 132.7 68.3 248 68.3c136.8 0 248 111 248 187.7zM155.4 384.5l-30.6-12.6c5.4 10.9 14.1 20.1 25.4 25.9 23.1 11.9 51.1 3 63-20.1 5.8-11.3 6.5-23.9 2-35.6-4.4-11.7-13.1-21.1-24.4-27-11.7-6-24.6-6.8-36.4-2.7l31.6 13c17.9 7.4 26.4 27.9 19 45.8-7.4 17.9-27.9 26.4-45.8 19-.5-.2-.9-.5-1.4-.7l-2.4.1zM317.4 188.1c0-30.1 24.4-54.5 54.5-54.5 30.1 0 54.5 24.4 54.5 54.5 0 30.1-24.4 54.5-54.5 54.5-30.1 0-54.5-24.4-54.5-54.5zm9.5 0c0 24.8 20.1 44.9 44.9 44.9 24.8 0 44.9-20.1 44.9-44.9 0-24.8-20.1-44.9-44.9-44.9-24.8 0-44.9 20.1-44.9 44.9z"/></symbol>
+    <symbol id="i-steam" viewBox="0 0 24 24"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></symbol>
     <symbol id="i-discord" viewBox="0 0 127.14 96.36"><path d="M107.7 8.07A105.15 105.15 0 0 0 81.47 0a72.06 72.06 0 0 0-3.36 6.83 97.68 97.68 0 0 0-29.11 0A72.37 72.37 0 0 0 45.64 0a105.89 105.89 0 0 0-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0 0 32.17 16.15 77.7 77.7 0 0 0 6.89-11.11 68.42 68.42 0 0 1-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0 0 64.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 0 1-10.87 5.19 77 77 0 0 0 6.89 11.1 105.25 105.25 0 0 0 32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.04 12.69-11.43 12.69z"/></symbol>
     <symbol id="i-youtube" viewBox="0 0 576 512"><path d="M549.655 124.083c-6.281-23.65-24.814-42.183-48.464-48.464C458.764 64 288 64 288 64S117.236 64 74.809 75.619c-23.65 6.281-42.183 24.814-48.464 48.464C16 166.51 16 256 16 256s0 89.49 10.345 131.917c6.281 23.65 24.814 42.183 48.464 48.464C117.236 448 288 448 288 448s170.764 0 213.191-11.619c23.65-6.281 42.183-24.814 48.464-48.464C560 345.49 560 256 560 256s0-89.49-10.345-131.917zM232 334.059V177.941L361 256 232 334.059z"/></symbol>
     <symbol id="i-tiktok" viewBox="0 0 448 512"><path d="M448,209.9a210.1,210.1,0,0,1-122.8-39.2v178.7A133.3,133.3,0,1,1,192,216.1v67.1a66.7,66.7,0,1,0,66.7,66.7V0h66.5a143.4,143.4,0,0,0,1.9,22.6A143.9,143.9,0,0,0,448,129.8Z"/></symbol>
@@ -568,6 +650,8 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 <div class="scroll-progress" aria-hidden="true"><div class="scroll-progress__bar" id="scrollProgressBar"></div></div>
 
+<div class="bgfx" aria-hidden="true"><div class="bgfx__layer"></div><div class="bgfx__layer"></div></div>
+
 <div id="site-wrap">
 
 <!-- Navbar -->
@@ -577,7 +661,6 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
             <span></span><span></span><span></span>
         </button>
         <a href="#home" class="brand" aria-label="The Last Message - home">
-            <img referrerpolicy="no-referrer" src="https://files.catbox.moe/1zb08m.jpg" alt="" class="brand__img" decoding="async" onerror="this.src='https://i.imgur.com/bs8skllh.jpg';this.onerror=null;">
             <span class="brand__name">The Last Message</span>
         </a>
         <nav class="nav-links" aria-label="Main">
@@ -621,18 +704,18 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
         <a href="https://www.tiktok.com/@thelastmessageofficial" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><svg class="ico" width="22" height="22"><use href="#i-tiktok"/></svg></a>
         <a href="https://www.patreon.com/TheLastMessage?utm_campaign=creatorshare_creator" target="_blank" rel="noopener noreferrer" aria-label="Patreon"><svg class="ico" width="22" height="22"><use href="#i-patreon"/></svg></a>
     </div>
+    <a class="menu__cta" href="https://store.steampowered.com/app/5014440/The_Last_Message/" target="_blank" rel="noopener noreferrer">Wishlist on Steam</a>
 </div>
 
 <main>
 
 <!-- Hero carousel -->
-<section id="home" class="hero" aria-roledescription="carousel" aria-label="Featured">
+<section id="home" data-bg="" class="hero" aria-roledescription="carousel" aria-label="Featured">
     <article class="hero__slide is-active" aria-roledescription="slide" aria-label="1 of 3">
         <div class="hero__bg" style="background-image:url('https://files.catbox.moe/hzl17x.png')"></div>
         <div class="hero__shade"></div>
         <div class="hero__panel"></div>
         <div class="hero__content">
-            <img referrerpolicy="no-referrer" src="https://files.catbox.moe/1zb08m.jpg" alt="The Last Message" class="hero__logo" decoding="async" fetchpriority="high" onerror="this.src='https://i.imgur.com/bs8skllh.jpg';this.onerror=null;">
             <p class="hero__kicker">Open World &middot; Realist Narrative</p>
             <h1 class="hero__title">The Last Message</h1>
             <p class="hero__text">Step into history and experience the profound story of Prophet Muhammad (peace be upon him), in a realist narrative open world.</p>
@@ -683,7 +766,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Trailer -->
-<section id="trailer" class="sec sec--center">
+<section id="trailer" data-bg="" class="sec sec--center">
     <p class="eyebrow fade-in"><span>Official</span></p>
     <h2 class="title fade-in">Trailer</h2>
     <p class="lede fade-in">Watch the official trailer for The Last Message</p>
@@ -698,7 +781,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Gameplay -->
-<section id="gameplay" class="sec sec--center">
+<section id="gameplay" data-bg="https://files.catbox.moe/eecnei.png" class="sec sec--center">
     <p class="eyebrow fade-in"><span>Gameplay</span></p>
     <h2 class="title fade-in">Gameplay</h2>
     <p class="lede fade-in">Watch gameplay footage from The Last Message.<br>This footage is from an older build. The Last Message has evolved significantly since then.</p>
@@ -713,7 +796,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Story -->
-<section id="story" class="sec">
+<section id="story" data-bg="https://files.catbox.moe/ewccee.png" class="sec">
     <p class="eyebrow fade-in"><span>The Story</span></p>
     <h2 class="title fade-in">The Journey</h2>
     <p class="lede fade-in">Experience an authentic and respectful retelling of one of history's most impactful stories</p>
@@ -775,7 +858,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- FAQ -->
-<section id="faq" class="sec">
+<section id="faq" data-bg="https://files.catbox.moe/01b0ls.png" class="sec">
     <p class="eyebrow fade-in"><span>Knowledge</span></p>
     <h2 class="title fade-in">Frequently Asked Questions</h2>
     <p class="lede fade-in">Everything you need to know about The Last Message</p>
@@ -806,7 +889,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Community -->
-<section id="community" class="sec">
+<section id="community" data-bg="https://files.catbox.moe/hzl17x.png" class="sec">
     <p class="eyebrow fade-in"><span>Community</span></p>
     <h2 class="title fade-in">Join Our Community</h2>
     <p class="lede fade-in">Connect with fellow enthusiasts and stay updated on our journey</p>
@@ -860,7 +943,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Archive: Codex + Developer Logs -->
-<section id="archive" class="sec">
+<section id="archive" data-bg="https://files.catbox.moe/u5oeyg.png" class="sec">
     <p class="eyebrow fade-in"><span>The Archive</span></p>
     <h2 class="title fade-in">The Archive</h2>
     <p class="lede fade-in">Codex and Developer Logs &mdash; all the deeper layers of The Last Message in one place.</p>
@@ -974,24 +1057,17 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Team -->
-<section id="team" class="sec">
+<section id="team" data-bg="https://files.catbox.moe/sek4x7.png" class="sec">
     <p class="eyebrow fade-in"><span>The Team</span></p>
     <h2 class="title fade-in">Meet the Team</h2>
     <p class="lede fade-in">The passionate team crafting every detail of The Last Message</p>
-
-    <div class="lead fade-in">
-        <span class="lead__stripe"></span>
-        <div class="avatar avatar--lg">H</div>
-        <div>
-            <p class="lead__badge">Lead Developer</p>
-            <h3 class="lead__name">Hedy</h3>
-            <p class="lead__desc">Hello, I'm Hedy, the Lead Developer responsible for building The Last Message, including gameplay systems, mechanics, story design, level design, and more. I would like to sincerely thank all the contributors who helped me with the project!</p>
-        </div>
-    </div>
-
-    <div class="contrib fade-in"><span></span><p>Project Contributors</p><span></span></div>
+<div class="contrib fade-in"><span></span><p>Project Contributors</p><span></span></div>
 
     <div class="teamcats">
+        <div class="member member--solo fade-in">
+            <div class="member__top"><div class="avatar">H</div><div><h4 class="member__name">Hedy</h4><span class="role">Lead Developer</span></div></div>
+            <p>Hello, I'm Hedy, the Lead Developer responsible for building The Last Message, including gameplay systems, mechanics, story design, level design, and more. I would like to sincerely thank all the contributors who helped me with the project!</p>
+        </div>
         <div class="acc fade-in">
             <button class="acc__head acc__head--serif" type="button" aria-expanded="false"><span>Developers</span><span class="acc__toggle" aria-hidden="true"></span></button>
             <div class="acc__body"><div class="acc__inner">
@@ -1035,7 +1111,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <div class="divider" role="presentation"></div>
 
 <!-- Pre-Beta -->
-<section class="sec sec--center prebeta fade-in">
+<section class="sec sec--center prebeta fade-in" data-bg="https://files.catbox.moe/gyirfh.png">
     <p class="eyebrow"><span>Pre-Beta</span></p>
     <h2 class="title title--md">Currently in Development</h2>
     <p class="lede">The game is currently in pre-beta. Join the community on Discord if you want to get early access and be part of the journey.</p>
@@ -1050,9 +1126,6 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 <!-- Footer -->
 <footer class="footer">
     <div class="footer__inner">
-        <a href="#home" class="footer__logo" aria-label="Back to top">
-            <img src="https://files.catbox.moe/1zb08m.jpg" alt="The Last Message" loading="lazy" decoding="async">
-        </a>
         <nav class="footer__links" aria-label="Footer">
             <a href="#home">Home</a>
             <a href="#trailer">Trailer</a>
@@ -1065,7 +1138,6 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
             <a href="#devlogs">Dev Logs</a>
         </nav>
         <p class="copyright">&copy; 2026 The Last Message. All rights reserved. Made with respect and dedication.</p>
-        <p class="credit">Developed by Alen.Akhi</p>
     </div>
 </footer>
 
@@ -1449,6 +1521,56 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
     if (e.key !== 'Escape') return;
     closeCodex(); setMenu(false); setCta(false);
   });
+})();
+
+</script>
+<script>
+/* ================= SCROLL BACKGROUNDS ================= */
+(function () {
+  'use strict';
+  var wrap = document.querySelector('.bgfx');
+  if (!wrap || !('IntersectionObserver' in window)) return;
+  var layers = Array.prototype.slice.call(wrap.querySelectorAll('.bgfx__layer'));
+  var cache = {}, front = 0, current = '', token = 0;
+
+  function load(url) {
+    if (cache[url]) return cache[url];
+    cache[url] = new Promise(function (resolve) {
+      var im = new Image();
+      im.decoding = 'async';
+      im.onload = function () { (im.decode ? im.decode().catch(function () {}) : Promise.resolve()).then(resolve); };
+      im.onerror = resolve;
+      im.src = url;
+    });
+    return cache[url];
+  }
+  function show(url) {
+    if (url === current) return;
+    current = url;
+    var t = ++token;
+    if (!url) { layers.forEach(function (l) { l.classList.remove('on'); }); return; }
+    load(url).then(function () {
+      if (t !== token) return;
+      var back = 1 - front;
+      layers[back].style.backgroundImage = "url('" + url + "')";
+      layers[back].classList.add('on');
+      layers[front].classList.remove('on');
+      front = back;
+    });
+  }
+
+  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-bg]'));
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) show(en.target.getAttribute('data-bg') || ''); });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  secs.forEach(function (el) { io.observe(el); });
+
+  // Warm the cache quietly after the page is idle so swaps never wait on the network
+  function warm() {
+    var urls = secs.map(function (e) { return e.getAttribute('data-bg'); }).filter(Boolean), i = 0;
+    (function next() { if (i >= urls.length) return; load(urls[i++]).then(function () { setTimeout(next, 250); }); })();
+  }
+  window.addEventListener('load', function () { setTimeout(warm, 1500); });
 })();
 
 </script>
