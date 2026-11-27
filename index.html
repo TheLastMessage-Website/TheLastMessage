@@ -553,10 +553,9 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 /* Scroll backgrounds: two GPU layers that cross-fade, nothing runs on scroll */
 .bgfx { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; z-index: -1; pointer-events: none; overflow: hidden; background: var(--bg); contain: strict; }
-.bgfx::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 20% 18%, rgba(120, 180, 184, 0.26), transparent 70%), radial-gradient(55% 45% at 84% 70%, rgba(88, 140, 138, 0.22), transparent 70%); }
-.bgfx::after { content: ''; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(49, 92, 96, 0.84) 0%, rgba(38, 76, 84, 0.88) 45%, rgba(30, 62, 70, 0.94) 100%); }
-.bgfx__layer { position: absolute; inset: -6%; background-size: cover; background-position: center; opacity: 0; transform: translateZ(0); backface-visibility: hidden; filter: blur(30px) grayscale(1) brightness(1.15); transition: opacity 1s ease; }
-.bgfx__layer.on { opacity: 1; }
+.bgfx::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(8, 11, 16, 0.12), rgba(8, 11, 16, 0.5)), linear-gradient(180deg, rgba(8, 11, 16, 0.22), rgba(8, 11, 16, 0.36)); }
+.bgfx__layer { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1.05) translateZ(0); backface-visibility: hidden; filter: brightness(1.08) saturate(1.05); transition: opacity 1.6s ease, transform 10s ease-out; will-change: opacity; }
+.bgfx__layer.on { opacity: 1; transform: scale(1) translateZ(0); }
 .sec .title, .sec .lede, .sec .eyebrow, .feature__title { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55); }
 
 /* Navbar — Assassin's Creed look */
@@ -623,32 +622,6 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 /* Footer without logo */
 .footer { padding-top: 3rem; }
-
-/* ---- Teal-blue theme taken from the hero "Start your journey" panel ---- */
-:root { --tl-card: #264850; --tl-deep: #1e3e46; --tl-line: rgba(190, 225, 228, 0.16); --tl-accent: #588c8a; }
-.acc, .card { background: var(--tl-card); border-color: var(--tl-line); }
-.acc:hover, .acc.active, .card:hover { border-color: rgba(190, 225, 228, 0.38); }
-.member { background: var(--tl-deep); border-color: var(--tl-line); }
-.member:hover { border-color: rgba(190, 225, 228, 0.38); }
-.frame { background: var(--tl-card); border-color: var(--tl-line); }
-.card__media { background: #183339; }
-.card--social .card__media--icon, .card__media--icon { background: #1f4249; }
-.card__tag { background: rgba(190, 225, 228, 0.1); }
-.card__text, .acc__inner > p, .member p { color: #c9dadc; }
-.card__meta { color: #c9dadc; }
-.acc.active .acc__toggle { background: var(--tl-accent); border-color: var(--tl-accent); }
-.acc__toggle, .sq-btn { border-color: rgba(190, 225, 228, 0.4); }
-.sq-btn { background: var(--tl-card); }
-.sq-btn:hover:not(:disabled) { border-color: rgba(220, 240, 242, 0.8); }
-.card .btn, .btn--arrow { background: rgba(190, 225, 228, 0.1); border-color: rgba(190, 225, 228, 0.4); }
-.card .btn:hover, .btn--arrow:hover { background: rgba(190, 225, 228, 0.2); border-color: rgba(220, 240, 242, 0.8); }
-.lede { color: #d3e3e5; }
-.divider { --b: rgba(215, 238, 240, 0.85); --d: rgba(215, 238, 240, 0.22); }
-.footer { background: #1b3840; border-top-color: var(--tl-line); }
-/* hero bottom fades into the same teal so the page flows on without a hard edge */
-.hero__shade { background: linear-gradient(180deg, rgba(8, 11, 16, 0.6) 0, rgba(8, 11, 16, 0) 28%), linear-gradient(90deg, rgba(8, 11, 16, 0.78) 0, rgba(8, 11, 16, 0.25) 55%, rgba(8, 11, 16, 0) 80%), linear-gradient(0deg, rgba(30, 62, 70, 0.95) 0, rgba(30, 62, 70, 0.45) 32%, rgba(30, 62, 70, 0) 62%); }
-@media (max-width: 800px) { .hero__shade { background: linear-gradient(180deg, rgba(8, 11, 16, 0.55) 0, rgba(8, 11, 16, 0) 30%); } }
-
 </style>
     <noscript><style>#page-loader{display:none}</style></noscript>
 </head>
@@ -677,7 +650,7 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 <div class="scroll-progress" aria-hidden="true"><div class="scroll-progress__bar" id="scrollProgressBar"></div></div>
 
-<div class="bgfx" aria-hidden="true"><div class="bgfx__layer on" style="background-image:url('https://files.catbox.moe/ewccee.png')"></div></div>
+<div class="bgfx" aria-hidden="true"><div class="bgfx__layer"></div><div class="bgfx__layer"></div></div>
 
 <div id="site-wrap">
 
@@ -1550,6 +1523,44 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
   });
 })();
 
+</script>
+<script>
+/* ================= SCROLL BACKGROUNDS (3 pictures across the page) ================= */
+(function () {
+  'use strict';
+  var wrap = document.querySelector('.bgfx'); if (!wrap) return;
+  var layers = Array.prototype.slice.call(wrap.querySelectorAll('.bgfx__layer'));
+  var PICS = ['https://files.catbox.moe/ewccee.png', 'https://files.catbox.moe/eecnei.png', 'https://files.catbox.moe/hzl17x.png'];
+  var cache = {}, front = 0, current = -1, token = 0, ticking = false;
+  function load(u) {
+    if (cache[u]) return cache[u];
+    return cache[u] = new Promise(function (res) {
+      var im = new Image(); im.decoding = 'async';
+      im.onload = function () { (im.decode ? im.decode().catch(function () {}) : Promise.resolve()).then(res); };
+      im.onerror = res; im.src = u;
+    });
+  }
+  function show(i) {
+    if (i === current) return; current = i; var t = ++token;
+    load(PICS[i]).then(function () {
+      if (t !== token) return;
+      var back = 1 - front;
+      layers[back].style.backgroundImage = "url('" + PICS[i] + "')";
+      layers[back].classList.add('on'); layers[front].classList.remove('on'); front = back;
+    });
+  }
+  function frame() {
+    ticking = false;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var p = max > 0 ? (window.pageYOffset || 0) / max : 0;
+    show(p < 0.34 ? 0 : p < 0.67 ? 1 : 2);
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  show(0);
+  window.addEventListener('load', function () { setTimeout(function () { load(PICS[1]).then(function () { load(PICS[2]); }); onScroll(); }, 1200); });
+})();
 </script>
 </body>
 </html>
