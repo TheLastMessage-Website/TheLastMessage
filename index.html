@@ -553,8 +553,9 @@ em, .translit { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
 
 /* Scroll backgrounds: two GPU layers that cross-fade, nothing runs on scroll */
 .bgfx { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; z-index: -1; pointer-events: none; overflow: hidden; background: var(--bg); contain: strict; }
-.bgfx::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, rgba(8, 11, 16, 0.12), rgba(8, 11, 16, 0.5)), linear-gradient(180deg, rgba(8, 11, 16, 0.22), rgba(8, 11, 16, 0.36)); }
-.bgfx__layer { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: translateZ(0); backface-visibility: hidden; filter: brightness(1.08) saturate(1.08); transition: opacity 1s ease; }
+.bgfx::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 18% 22%, rgba(150, 190, 205, 0.20), transparent 70%), radial-gradient(55% 45% at 82% 68%, rgba(120, 165, 185, 0.16), transparent 70%); }
+.bgfx::after { content: ''; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(62, 92, 108, 0.58), rgba(34, 48, 60, 0.74)); }
+.bgfx__layer { position: absolute; inset: -6%; background-size: cover; background-position: center; opacity: 0; transform: translateZ(0); backface-visibility: hidden; filter: blur(26px) grayscale(0.85) brightness(1.2) contrast(1.05); transition: opacity 1s ease; }
 .bgfx__layer.on { opacity: 1; }
 .sec .title, .sec .lede, .sec .eyebrow, .feature__title { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55); }
 
